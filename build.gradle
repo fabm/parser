@@ -1,0 +1,65 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+
+}
+
+plugins {
+    id "org.asciidoctor.convert" version "1.5.3"
+    // we need this plugin to add ruby gems
+    id "com.github.jruby-gradle.base" version "1.3.0"
+    id 'groovy'
+    id 'java'
+}
+sourceSets {
+    main {
+        groovy {
+            srcDirs = ['src/main/groovy']
+        }
+    }
+
+    test {
+        groovy {
+            srcDirs = ['src/test/groovy']
+        }
+    }
+}
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.4.7'
+    // this is the gem we need for diagrams
+    gems 'rubygems:asciidoctor-diagram:1.4.0'
+}
+
+asciidoctorj {
+    // We can change the AsciidoctorJ
+    // dependency version.
+    version = '1.5.1'
+}
+
+asciidoctor {
+    // configure source and output files and folders
+    sourceDir = file('docs')
+    outputDir = file('build/docs')
+    // good to see what the build is doing...
+    logDocuments = true
+
+    // the jrubyPrepare tasks takes care of loading the gems
+    dependsOn jrubyPrepare
+
+    // the asciidoctor task depends on this gem
+    requires = ['asciidoctor-diagram']
+
+    // seems to be important :-)
+    gemPath = jrubyPrepare.outputDir
+
+}
+
+// let's set a defaultTask for convenience
+defaultTasks 'asciidoctor'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.0'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+}
